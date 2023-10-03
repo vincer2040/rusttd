@@ -1,6 +1,6 @@
 use ncurses::{
     addstr, attroff, attron, endwin, getch, init_pair, initscr, mv, refresh, start_color,
-    COLOR_BLACK, COLOR_WHITE, COLOR_PAIR, use_default_colors, noecho, curs_set, CURSOR_VISIBILITY,
+    COLOR_BLACK, COLOR_WHITE, COLOR_PAIR, use_default_colors, noecho, curs_set, CURSOR_VISIBILITY, echo,
 };
 
 const REGULAR_PAIR: i16 = 0;
@@ -19,10 +19,10 @@ fn main() {
 }
 
 fn main_loop() {
-    let todos = vec![
-        "write todo app",
-        "make cup of tea",
-        "buy a bread",
+    let mut todos = vec![
+        "write todo app".to_owned(),
+        "make cup of tea".to_owned(),
+        "buy a bread".to_owned(),
     ];
     let mut cur_pos = 0;
     loop {
@@ -34,8 +34,8 @@ fn main_loop() {
             };
 
             attron(COLOR_PAIR(pair));
-            mv(i as i32, 0);
-            addstr(*todo);
+            mv(i as i32, 1);
+            addstr(todo);
             attroff(COLOR_PAIR(pair));
         }
         refresh();
@@ -51,7 +51,30 @@ fn main_loop() {
                 }
                 cur_pos = std::cmp::max(cur_pos - 1, 0);
             }
+            'a' => {
+                mv(todos.len() as i32, 1);
+                let input = read_new_todo();
+                todos.push(input);
+            }
             _ => {}
         }
     }
+}
+
+fn read_new_todo() -> String {
+    let mut input = String::new();
+
+    echo();
+    curs_set(CURSOR_VISIBILITY::CURSOR_VISIBLE);
+
+    let mut ch = getch() as u8 as char;
+    while ch != '\n' {
+        input.push(ch);
+        ch = getch() as u8 as char;
+    }
+
+    noecho();
+    curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+
+    input
 }
